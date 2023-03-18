@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Controls;
-
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Lab2
 {
@@ -34,43 +36,49 @@ namespace Lab2
 
         private bool allInputsValid()
         {
+            string name = this.nameInput.Text;
+            string surname = this.surnameInput.Text;
+            string email = this.emailInput.Text;
+            DateTime? birthday = this.dateInput.SelectedDate;
 
-            // TODO make this stuff multithreaded
+            bool[] results = Task.WhenAll(new List<Task<bool>> {
+                validateName(name),
+                validateSurname(surname),
+                validateEmail(email),
+                validateDate(birthday),
+            }).Result;
 
-            return
-                nameIsValid(this.nameInput.Text) &&
-                surnameIsValid(this.surnameInput.Text) &&
-                emailIsValid(this.emailInput.Text) &&
-                dateIsValid(this.dateInput.SelectedDate);
+            return results.All(x => x);
         }
 
-        private bool nameIsValid(string name)
+        private Task<bool> validateName(string name)
         {
+            System.Threading.Thread.Sleep(5000);
             return
-                !string.IsNullOrEmpty(name) &&
-                Regex.IsMatch(name, "[\\w]+", RegexOptions.IgnoreCase);
+                Task.Run(() => !string.IsNullOrEmpty(name) &&
+                Regex.IsMatch(name, "[\\w]+", RegexOptions.IgnoreCase));
         }
 
-        private bool surnameIsValid(string surname)
+        private Task<bool> validateSurname(string surname)
         {
             return
-                !string.IsNullOrEmpty(surname) &&
-                Regex.IsMatch(surname, "[\\w]+", RegexOptions.IgnoreCase);
+                Task.Run(() => !string.IsNullOrEmpty(surname) &&
+                Regex.IsMatch(surname, "[\\w]+", RegexOptions.IgnoreCase));
         }
 
-        private bool emailIsValid(string email)
+        private Task<bool> validateEmail(string email)
         {
             return
-                !string.IsNullOrEmpty(email) &&
-                Regex.IsMatch(email, "[\\w_.]+@[\\w_.]+", RegexOptions.IgnoreCase);
+                Task.Run(() => !string.IsNullOrEmpty(email) &&
+                Regex.IsMatch(email, "[\\w_.]+@[\\w_.]+", RegexOptions.IgnoreCase));
         }
 
-        private bool dateIsValid(DateTime? date)
+        private Task<bool> validateDate(DateTime? date)
         {
             return
-                date.HasValue &&
+                Task.Run(() => date.HasValue &&
                 date.Value <= DateTime.Now &&
-                (DateTime.Now.Year - date.Value.Year) <= Person.MAX_AGE;
+                (DateTime.Now.Year - date.Value.Year) <= Person.MAX_AGE);
         }
 
     }
