@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Controls;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Threading;
+using System.Windows;
+using System.Windows.Navigation;
 
 namespace Lab2
 {
@@ -12,6 +16,7 @@ namespace Lab2
     /// </summary>
     public partial class InputPage : Page
     {
+
         public InputPage()
         {
             InitializeComponent();
@@ -20,26 +25,40 @@ namespace Lab2
         public void submitButtonClicked(object sender, EventArgs e)
         {
             this.IsEnabled = false;
-            if (allInputsValid())
-            {
-                Person p = new Person(
-                    this.nameInput.Text,
-                    this.surnameInput.Text,
-                    this.emailInput.Text,
-                    this.dateInput.SelectedDate.Value
-                    );
-                PersonOutput personOutputPage = new PersonOutput(p);
-                this.NavigationService.Navigate(personOutputPage);
-            }
-            this.IsEnabled = true;
-        }
 
-        private bool allInputsValid()
-        {
             string name = this.nameInput.Text;
             string surname = this.surnameInput.Text;
             string email = this.emailInput.Text;
             DateTime? birthday = this.dateInput.SelectedDate;
+
+            Thread worker = new Thread(
+                async () =>
+                {
+                    if (await Task.Run(() =>
+                    {
+                        this.Dispatcher.Invoke(() => this.IsEnabled = true);
+                        return allInputsValid(name, surname, email, birthday);
+                    }
+                    ))
+                    {
+                        Person p = new Person(name, surname, email, birthday.Value);
+                        this.Dispatcher.Invoke(() => this.NavigationService.Navigate(new PersonOutput(p)));
+                    }
+                }
+                );
+
+            worker.IsBackground = true;
+            worker.SetApartmentState(ApartmentState.STA);
+            worker.Start();
+        }
+
+        private bool allInputsValid(
+                string name,
+                string surname,
+                string email,
+                DateTime? birthday
+            )
+        {
 
             bool[] results = Task.WhenAll(new List<Task<bool>> {
                 validateName(name),
@@ -53,7 +72,6 @@ namespace Lab2
 
         private Task<bool> validateName(string name)
         {
-            System.Threading.Thread.Sleep(5000);
             return
                 Task.Run(() => !string.IsNullOrEmpty(name) &&
                 Regex.IsMatch(name, "[\\w]+", RegexOptions.IgnoreCase));
