@@ -1,6 +1,8 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Lab2
 {
@@ -40,7 +42,7 @@ namespace Lab2
             "Goat"
         };
 
-        public string calculateZodiac(DateTime birthday)
+        private string calculateZodiac(DateTime birthday)
         {
             switch (birthday.Month)
             {
@@ -157,8 +159,6 @@ namespace Lab2
             }
         }
 
-        
-
         private void setFullName(string name, string surname)
         {
             if (Regex.IsMatch(name, "[\\w]+", RegexOptions.IgnoreCase))
@@ -219,21 +219,27 @@ namespace Lab2
 
         public Person(string name, string surname, string email, DateTime birthday)
         {
-            setFullName(name, surname);
-            setBirthday(birthday);
-            setEmail(email);
+            Task.WhenAll(new List<Task> {
+                Task.Factory.StartNew(() => setFullName(name, surname)),
+                Task.Factory.StartNew(() => setEmail(email)),
+                Task.Factory.StartNew(() => setBirthday(birthday))
+            });
         }
 
         public Person(string name, string surname, string email)
         {
-            setFullName(name, surname);
-            setEmail(email);
+            Task.WhenAll(new List<Task> {
+                Task.Factory.StartNew(() => setFullName(name, surname)),
+                Task.Factory.StartNew(() => setEmail(email))
+            });
         }
 
         public Person(string name, string surname, DateTime birthday)
         {
-            setFullName(name, surname);
-            setBirthday(birthday);
+            Task.WhenAll(new List<Task> {
+                Task.Factory.StartNew(() => setFullName(name, surname)),
+                Task.Factory.StartNew(() => setBirthday(birthday))
+            });
         }
     }
 }

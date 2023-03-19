@@ -24,32 +24,35 @@ namespace Lab2
 
         public void submitButtonClicked(object sender, EventArgs e)
         {
-            this.IsEnabled = false;
+            lock (this)
+            {
+                this.IsEnabled = false;
 
-            string name = this.nameInput.Text;
-            string surname = this.surnameInput.Text;
-            string email = this.emailInput.Text;
-            DateTime? birthday = this.dateInput.SelectedDate;
+                string name = this.nameInput.Text;
+                string surname = this.surnameInput.Text;
+                string email = this.emailInput.Text;
+                DateTime? birthday = this.dateInput.SelectedDate;
 
-            Thread worker = new Thread(
-                async () =>
-                {
-                    if (await Task.Run(() =>
+                Thread worker = new Thread(
+                    async () =>
                     {
-                        this.Dispatcher.Invoke(() => this.IsEnabled = true);
-                        return allInputsValid(name, surname, email, birthday);
+                        if (await Task.Run(() =>
+                        {
+                            this.Dispatcher.Invoke(() => this.IsEnabled = true);
+                            return allInputsValid(name, surname, email, birthday);
+                        }
+                        ))
+                        {
+                            Person p = new Person(name, surname, email, birthday.Value);
+                            this.Dispatcher.Invoke(() => this.NavigationService.Navigate(new PersonOutput(p)));
+                        }
                     }
-                    ))
-                    {
-                        Person p = new Person(name, surname, email, birthday.Value);
-                        this.Dispatcher.Invoke(() => this.NavigationService.Navigate(new PersonOutput(p)));
-                    }
-                }
-                );
+                    );
 
-            worker.IsBackground = true;
-            worker.SetApartmentState(ApartmentState.STA);
-            worker.Start();
+                worker.IsBackground = true;
+                worker.SetApartmentState(ApartmentState.STA);
+                worker.Start();
+            }
         }
 
         private bool allInputsValid(
