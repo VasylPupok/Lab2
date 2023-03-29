@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 
 namespace Lab2
 {
+    /// <summary>
+    /// Class which represents all information about user
+    /// </summary>
     internal class Person
     {
         // user info
         public string Name { get; private set; }
-
         public string Surname { get; private set; }
         public string Email { get; private set; }
         public DateTime Birthday { get; private set; }
@@ -21,12 +23,12 @@ namespace Lab2
         public string ChineseZodiac { get; private set; }
         public bool IsBirthday { get; private set; }
 
-        // max age
+        // max age allowed for users
         public static readonly short MAX_AGE = 135;
 
         // some stuff to set all fields (maybe I should rewrite it)
 
-        private static string[] CHINESE_SIGNS = new string[]
+        private readonly static string[] CHINESE_SIGNS = new string[]
         {
             "Monkey",
             "Rooster",
@@ -167,7 +169,7 @@ namespace Lab2
             }
             else
             {
-                throw new Exception("Illegal name value: " + name);
+                throw new NameException(name);
             }
 
             if (Regex.IsMatch(surname, "[\\w]+", RegexOptions.IgnoreCase))
@@ -176,7 +178,7 @@ namespace Lab2
             }
             else
             {
-                throw new Exception("Illegal surname value: " + surname);
+                throw new SurnameException(surname);
             }
         }
 
@@ -192,7 +194,7 @@ namespace Lab2
             }
             else
             {
-                throw new Exception("invalid email input:" + email);
+                throw new EmailException(email);
             }
         }
 
@@ -200,7 +202,10 @@ namespace Lab2
         {
             if (DateTime.Now < birthday)
             {
-                throw new Exception("Illegal birthday value: birthday cannot be in future. Value: " + birthday);
+                throw BirthdayException.NotBornYet(birthday);
+            } else if ((DateTime.Now - birthday).TotalDays > (MAX_AGE*365 + MAX_AGE / 4) )  // MAX_AGE / 4 - leap years have additional day
+            {
+                throw BirthdayException.TooOld(birthday);
             }
             Birthday = birthday;
 
@@ -242,4 +247,52 @@ namespace Lab2
             });
         }
     }
+
+    internal class NameException : ArgumentException
+    {
+        public NameException(string name) :
+            base($"Illegal name: {name}")
+        {
+        }
+    }
+
+    internal class SurnameException : ArgumentException
+    {
+        public SurnameException(string name) :
+            base($"Illegal surname: {name}")
+        {
+        }
+    }
+
+    internal class EmailException : ArgumentException
+    {
+        public EmailException(string email) :
+            base($"Illegal email: {email}")
+        {
+        }
+    }
+
+    internal class BirthdayException : ArgumentException
+    {
+        private BirthdayException(string msg) :
+            base(msg)
+        {
+        }
+
+        public static BirthdayException TooOld(DateTime birthday) {
+            return new BirthdayException(
+                $"Birthday is too far in path: {birthday}.\n Max allowed age for users is {Person.MAX_AGE}"
+                );
+        }
+
+        public static BirthdayException NotBornYet(DateTime birthday)
+        {
+            return new BirthdayException(
+                $"Birthday cannot be set in future: {birthday}.\n We do not work with those, who haven't born yet"
+                );
+        }
+
+    }
+
+
 }

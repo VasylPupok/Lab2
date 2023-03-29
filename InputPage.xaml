@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:Lab2"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800" 
-      MinHeight="480" MinWidth="450"
+      MinHeight="550" MinWidth="450"
       Title="Lab 2">
 
         <Grid>
@@ -30,7 +30,8 @@
                     <RowDefinition Height="*" MinHeight="42"/>
                     <RowDefinition Height="*" MinHeight="42"/>
                     <RowDefinition Height="*" MinHeight="42"/>
-                </Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="42"/>
+            </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" MinWidth="150"/>
@@ -58,6 +59,8 @@
 
                 <Button Grid.Row="11" Grid.Column="1" Name="submit" Click="submitButtonClicked" Content="Submit" FontSize="18"></Button>
 
+                <TextBlock Grid.Row="12" Grid.Column="1" Name="errorText" FontSize="18" Foreground="Red"></TextBlock>
+                
             </Grid>
 
         </Grid>

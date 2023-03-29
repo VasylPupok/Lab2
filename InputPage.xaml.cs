@@ -8,6 +8,8 @@ using System.Linq;
 using System.Windows.Threading;
 using System.Windows;
 using System.Windows.Navigation;
+using System.Xml.Linq;
+using System.Windows.Interop;
 
 namespace Lab2
 {
@@ -26,6 +28,7 @@ namespace Lab2
         {
             lock (this)
             {
+
                 this.IsEnabled = false;
 
                 string name = this.nameInput.Text;
@@ -34,19 +37,20 @@ namespace Lab2
                 DateTime? birthday = this.dateInput.SelectedDate;
 
                 Thread worker = new Thread(
-                    async () =>
+                async () =>
                     {
                         if (await Task.Run(() =>
-                        {
-                            this.Dispatcher.Invoke(() => this.IsEnabled = true);
-                            return allInputsValid(name, surname, email, birthday);
-                        }
-                        ))
+                            {
+                                return allInputsValid(name, surname, email, birthday);
+                            })
+                        )
                         {
                             Person p = new Person(name, surname, email, birthday.Value);
                             this.Dispatcher.Invoke(() => this.NavigationService.Navigate(new PersonOutput(p)));
                         }
+                        this.Dispatcher.Invoke(() => this.IsEnabled = true);
                     }
+
                     );
 
                 worker.IsBackground = true;
@@ -75,32 +79,35 @@ namespace Lab2
 
         private Task<bool> validateName(string name)
         {
+            Thread.Sleep(1000);
             return
-                Task.Run(() => !string.IsNullOrEmpty(name) &&
-                Regex.IsMatch(name, "[\\w]+", RegexOptions.IgnoreCase));
+                Task.Run(() =>
+                !string.IsNullOrEmpty(name) && Regex.IsMatch(name, "[\\w]+", RegexOptions.IgnoreCase));
         }
 
         private Task<bool> validateSurname(string surname)
         {
             return
-                Task.Run(() => !string.IsNullOrEmpty(surname) &&
-                Regex.IsMatch(surname, "[\\w]+", RegexOptions.IgnoreCase));
+                Task.Run(() =>
+                !string.IsNullOrEmpty(surname) && Regex.IsMatch(surname, "[\\w]+", RegexOptions.IgnoreCase));
         }
 
         private Task<bool> validateEmail(string email)
         {
             return
-                Task.Run(() => !string.IsNullOrEmpty(email) &&
-                Regex.IsMatch(email, "[\\w_.]+@[\\w_.]+", RegexOptions.IgnoreCase));
+                Task.Run(
+                    () => !string.IsNullOrEmpty(email) &&
+                    Regex.IsMatch(email, "[\\w_.]+@[\\w_.]+", RegexOptions.IgnoreCase)
+                        );
         }
 
         private Task<bool> validateDate(DateTime? date)
         {
-            return
-                Task.Run(() => date.HasValue &&
-                date.Value <= DateTime.Now &&
-                (DateTime.Now.Year - date.Value.Year) <= Person.MAX_AGE);
+            return Task.Run(() =>
+                    date.HasValue &&
+                    date.Value <= DateTime.Now &&
+                    (DateTime.Now.Year - date.Value.Year) <= Person.MAX_AGE
+                    );
         }
-
     }
 }
